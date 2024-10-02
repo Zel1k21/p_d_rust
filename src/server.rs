@@ -6,7 +6,7 @@ use crate::parse::parse;
 use crate::types::Server;
 
 impl Server {
-    pub fn new(on: &str) -> Server{
+    pub fn new(on: &str) -> Server {
         Server {
             listener: TcpListener::bind(on).unwrap(),
         }
@@ -15,7 +15,9 @@ impl Server {
     fn handle_connection(mut stream: TcpStream) {
         thread::spawn(move || match parse(&mut stream) {
             Ok(_) => {
-                match stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\ngooooooooooool") {
+                match stream
+                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\ngooooooooooool")
+                {
                     Ok(_) => println!("Response sent"),
                     Err(e) => println!("Error {:?}", e),
                 }

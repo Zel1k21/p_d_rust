@@ -18,7 +18,11 @@ pub fn internal_parse(req: String) -> Result<Request, HttpParseError> {
     let path = get_path(strings.next())?;
     let http_version = get_http_version(strings.next())?;
 
-    Ok(Request { method, path, http_version, })
+    Ok(Request {
+        method,
+        path,
+        http_version,
+    })
 }
 
 fn get_http_version(version: Option<&str>) -> Result<HttpVersion, HttpParseError> {
@@ -48,6 +52,6 @@ pub fn get_method(method: Option<&str>) -> Result<Method, HttpParseError> {
         Some("PATCH") => Method::Patch,
         Some("POST") => Method::Post,
         Some("PUT") => Method::Put,
-        _ => return Err(HttpParseError::InvalidMethod)
+        _ => return Err(HttpParseError::InvalidMethod),
     })
 }

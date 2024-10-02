@@ -9,7 +9,9 @@ mod test_server {
     #[test]
 
     fn run_server() {
-        let handle = thread::spawn(|| { Server::new(ADDRESS).listen();});
+        let handle = thread::spawn(|| {
+            Server::new(ADDRESS).listen();
+        });
 
         reqwest::blocking::get(format!("http://{}/ok", ADDRESS)).unwrap();
 

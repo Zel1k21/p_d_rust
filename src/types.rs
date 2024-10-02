@@ -6,7 +6,13 @@ pub struct Server {
 
 #[derive(Debug, PartialEq)]
 pub enum Method {
-    Get, Post, Put, Head, Delete, Options, Patch,
+    Get,
+    Post,
+    Put,
+    Head,
+    Delete,
+    Options,
+    Patch,
 }
 
 #[derive(Debug, PartialEq)]
