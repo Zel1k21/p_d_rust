@@ -16,7 +16,7 @@ impl Server {
         thread::spawn(move || match parse(&mut stream) {
             Ok(_) => {
                 match stream
-                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\ngooooooooooool")
+                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\ngooooooooooooaaaaaaaaaaaaaal")
                 {
                     Ok(_) => println!("Response sent"),
                     Err(e) => println!("Error {:?}", e),
