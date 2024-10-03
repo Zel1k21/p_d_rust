@@ -36,3 +36,11 @@ pub struct Request {
     pub path: String,
     pub http_version: HttpVersion,
 }
+
+#[derive(Debug, PartialEq)]
+pub enum ContentType {
+    Html,
+    Css,
+    Jpeg,
+    Png,
+}

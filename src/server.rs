@@ -1,9 +1,9 @@
-use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 
 use crate::parse::parse;
-use crate::types::Server;
+use crate::response::send_file;
+use crate::types::{ContentType, Server};
 
 impl Server {
     pub fn new(on: &str) -> Server {
@@ -15,12 +15,8 @@ impl Server {
     fn handle_connection(mut stream: TcpStream) {
         thread::spawn(move || match parse(&mut stream) {
             Ok(_) => {
-                match stream
-                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\ngooooooooooooaaaaaaaaaaaaaal")
-                {
-                    Ok(_) => println!("Response sent"),
-                    Err(e) => println!("Error {:?}", e),
-                }
+                send_file(&stream, "./static/html/index.html", &ContentType::Html);
+                // send_file(&stream, "./static/images/eevee.png", &ContentType::Png);
             }
             Err(err) => println!("Error: {:?}", err),
         });
