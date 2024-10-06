@@ -36,9 +36,9 @@ pub fn ext_to_content_type_enum(file_ext: &str) -> Result<&ContentType, &'static
 
 pub fn content_type_enum_to_str(content_type: &ContentType) -> &str {
     match content_type {
-        ContentType::Html => return "text/html",
-        ContentType::Css => return "text/css",
-        ContentType::Jpeg => return "image/jpeg",
-        ContentType::Png => return "image/png",
+        ContentType::Html => "text/html",
+        ContentType::Css => "text/css",
+        ContentType::Jpeg => "image/jpeg",
+        ContentType::Png => "image/png",
     }
 }

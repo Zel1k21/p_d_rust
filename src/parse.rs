@@ -8,12 +8,9 @@ pub fn parse(stream: &mut TcpStream) -> Result<Request, HttpParseError> {
 
     match stream.read(&mut buf) {
         Err(err) => Err(HttpParseError::Other(format!("{}", err))),
-        Ok(_) => {
-            let stripped = buf.split(|byte| *byte == 0).next().unwrap_or_default();
-            Ok(internal_parse(
-                String::from_utf8_lossy(&stripped).into_owned(),
-            )?)
-        }
+        Ok(n) => Ok(internal_parse(
+            String::from_utf8_lossy(buf.split_at(n).0).into_owned(),
+        )?),
     }
 }
 
@@ -25,14 +22,14 @@ pub fn internal_parse(req: String) -> Result<Request, HttpParseError> {
     let (method, path, http_version) = parse_first_line(first_line)?;
 
     let mut headers = HashMap::new();
-    for header in head_lines.into_iter() {
+    for header in head_lines {
         let (key, value) = parse_header(header)?;
         headers.insert(key.to_string(), value.to_string());
     }
 
     let body = match head_body.next() {
         Some(str) => {
-            if str.len() > 0 {
+            if !str.is_empty() {
                 Some(str.to_string())
             } else {
                 None
