@@ -75,7 +75,7 @@ fn get_http_version(version: Option<&str>) -> Result<HttpVersion, HttpParseError
     match version {
         Some("HTTP/1.1") => Ok(HttpVersion::Http1_1),
         Some("HTTP/2.0") => Ok(HttpVersion::Http2_0),
-        _ => Err(HttpParseError::InavlidHttpVersion),
+        _ => Err(HttpParseError::InvalidHttpVersion),
     }
 }
 

@@ -20,7 +20,7 @@ pub enum Method {
 pub enum HttpParseError {
     InvalidMethod,
     InvalidPath,
-    InavlidHttpVersion,
+    InvalidHttpVersion,
     InvalidHeader,
 
     Other(String),
