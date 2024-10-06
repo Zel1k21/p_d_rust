@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::{io::Read, net::TcpStream};
 
 use crate::types::{HttpParseError, HttpVersion, Method, Request};
@@ -7,22 +8,70 @@ pub fn parse(stream: &mut TcpStream) -> Result<Request, HttpParseError> {
 
     match stream.read(&mut buf) {
         Err(err) => Err(HttpParseError::Other(format!("{}", err))),
-        Ok(_) => Ok(internal_parse(String::from_utf8_lossy(&buf).into_owned())?),
+        Ok(_) => {
+            let stripped = buf.split(|byte| *byte == 0).next().unwrap_or_default();
+            Ok(internal_parse(
+                String::from_utf8_lossy(&stripped).into_owned(),
+            )?)
+        }
     }
 }
 
 pub fn internal_parse(req: String) -> Result<Request, HttpParseError> {
-    let mut strings = req.split("\r\n").next().unwrap().split(' ');
+    let mut head_body = req.split("\r\n\r\n");
+    let mut head_lines = head_body.next().unwrap_or_default().split("\r\n");
+    let first_line = head_lines.next().unwrap_or_default();
 
-    let method = get_method(strings.next())?;
-    let path = get_path(strings.next())?;
-    let http_version = get_http_version(strings.next())?;
+    let (method, path, http_version) = parse_first_line(first_line)?;
+
+    let mut headers = HashMap::new();
+    for header in head_lines.into_iter() {
+        let (key, value) = parse_header(header)?;
+        headers.insert(key.to_string(), value.to_string());
+    }
+
+    let body = match head_body.next() {
+        Some(str) => {
+            if str.len() > 0 {
+                Some(str.to_string())
+            } else {
+                None
+            }
+        }
+
+        None => None,
+    };
 
     Ok(Request {
         method,
         path,
         http_version,
+        headers,
+        body,
     })
+}
+
+fn parse_first_line(first_line: &str) -> Result<(Method, String, HttpVersion), HttpParseError> {
+    let mut strings = first_line.split(' ');
+
+    let method = get_method(strings.next())?;
+    let path = get_path(strings.next())?;
+    let http_version = get_http_version(strings.next())?;
+
+    Ok((method, path, http_version))
+}
+
+fn parse_header(header: &str) -> Result<(&str, &str), HttpParseError> {
+    let mut key_value = header.split(":");
+    let key = match key_value.next() {
+        Some(str) => Ok(str.trim()),
+        None => Err(HttpParseError::InvalidHeader),
+    }?;
+    let value = match key_value.next() {
+        Some(str) => Ok(str.trim()),
+        None => Err(HttpParseError::InvalidHeader),
+    }?;
+    Ok((key, value))
 }
 
 fn get_http_version(version: Option<&str>) -> Result<HttpVersion, HttpParseError> {

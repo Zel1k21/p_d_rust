@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::net::TcpListener;
 
 pub struct Server {
@@ -20,6 +21,7 @@ pub enum HttpParseError {
     InvalidMethod,
     InvalidPath,
     InavlidHttpVersion,
+    InvalidHeader,
 
     Other(String),
 }
@@ -35,6 +37,8 @@ pub struct Request {
     pub method: Method,
     pub path: String,
     pub http_version: HttpVersion,
+    pub headers: HashMap<String, String>,
+    pub body: Option<String>,
 }
 
 #[derive(Debug, PartialEq)]
