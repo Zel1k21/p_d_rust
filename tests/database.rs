@@ -1,8 +1,8 @@
 #[cfg(test)]
-mod test_db{
+mod test_db {
+    use p_d_rust::database::{add_user, delete_user};
     use rusqlite::{Connection, Result};
     use std::collections::HashMap;
-    use p_d_rust::database::{add_user, delete_user};
 
     #[derive(Debug)]
     struct User {
@@ -11,27 +11,35 @@ mod test_db{
     }
 
     #[test]
-    fn test_db() -> Result<()>{
+    fn test_db() -> Result<()> {
         let accounts = Connection::open("accounts.db").expect("Error opening db");
-        accounts.execute("
+        accounts.execute(
+            "
         create table if not exists user (
             id integer primary key,
             name text not null unique,
             password text not null
-        )", [])?;
+        )",
+            [],
+        )?;
 
         let users = HashMap::new();
-        add_user(&String::from("Jack"), &String::from("1 iq"), users.clone(), &accounts)?;
+        add_user(
+            &String::from("Jack"),
+            &String::from("1 iq"),
+            users.clone(),
+            &accounts,
+        )?;
         delete_user(&String::from("Jack"), users.clone(), &accounts)?;
         let mut stmt = accounts.prepare("SELECT * from user")?;
-        let users = stmt.query_map([],|row| {
+        let users = stmt.query_map([], |row| {
             Ok(User {
                 name: row.get(1)?,
                 password: row.get(2)?,
             })
         })?;
 
-        for user in users{
+        for user in users {
             println!("Found user {:?}", user);
         }
         Ok(())
