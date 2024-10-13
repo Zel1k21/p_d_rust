@@ -30,7 +30,7 @@ pub fn internal_parse(req: String) -> Result<Request, HttpParseError> {
     let body = match head_body.next() {
         Some(str) => {
             if !str.is_empty() {
-                Some(str.to_string())
+                Some(str.as_bytes().to_vec())
             } else {
                 None
             }

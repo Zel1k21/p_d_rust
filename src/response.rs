@@ -1,27 +1,53 @@
+use std::collections::HashMap;
 use std::fs;
 use std::{io::Write, net::TcpStream};
 
-use crate::types::ContentType;
+use crate::types::{ContentType, Response, ResponseCode};
 
-pub fn send_data(mut stream: &TcpStream, content_type: &ContentType, data: &[u8]) {
-    write_head(stream, content_type, &data.len());
-    stream.write_all(data).ok();
+pub fn send_response(mut stream: &TcpStream, response: &mut Response) {
+    write_head(stream, response);
+    match &response.body {
+        Some(bytes) => stream.write_all(bytes).ok(),
+        None => None,
+    };
 }
 
 pub fn send_file(stream: &TcpStream, path: &str, content_type: &ContentType) {
     let contents = fs::read(path).expect("Error reading file");
-    send_data(stream, content_type, &contents);
+    let mut headers: HashMap<String, String> = HashMap::new();
+    headers.insert(
+        "Content-Type".to_string(),
+        content_type_enum_to_str(content_type).to_string(),
+    );
+    let mut response = Response {
+        response_code: ResponseCode::OK,
+        headers,
+        body: Some(contents),
+    };
+    send_response(stream, &mut response);
 }
 
-fn write_head(mut stream: &TcpStream, content_type: &ContentType, content_length: &usize) {
+fn write_head(mut stream: &TcpStream, response: &mut Response) {
+    match &response.body {
+        Some(content) => response
+            .headers
+            .insert("Content-Length".to_string(), content.len().to_string()),
+        None => None,
+    };
     let head = format!(
-        "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n",
-        content_type_enum_to_str(content_type),
-        content_length
-    )
-    .into_bytes();
+        "HTTP/1.1 {}\r\n",
+        response_code_enum_to_str(&response.response_code)
+    );
+    stream.write_all(head.as_bytes()).ok();
+    for header in &response.headers {
+        write_header(stream, header);
+    }
+    stream.write_all("\r\n".as_bytes()).ok();
+}
 
-    stream.write_all(&head).ok();
+fn write_header(mut stream: &TcpStream, header: (&String, &String)) {
+    let header_str = format!("{}: {}\r\n", header.0, header.1);
+    stream.write_all(header_str.as_bytes()).ok();
 }
 
 pub fn ext_to_content_type_enum(file_ext: &str) -> Result<&ContentType, &'static str> {
@@ -34,11 +60,18 @@ pub fn ext_to_content_type_enum(file_ext: &str) -> Result<&ContentType, &'static
     }
 }
 
-pub fn content_type_enum_to_str(content_type: &ContentType) -> &str {
+fn content_type_enum_to_str(content_type: &ContentType) -> &str {
     match content_type {
         ContentType::Html => "text/html",
         ContentType::Css => "text/css",
         ContentType::Jpeg => "image/jpeg",
         ContentType::Png => "image/png",
+    }
+}
+
+fn response_code_enum_to_str(response_code: &ResponseCode) -> &str {
+    match response_code {
+        ResponseCode::OK => "200 OK",
+        ResponseCode::NotFound => "404 Not Found",
     }
 }

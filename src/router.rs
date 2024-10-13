@@ -1,11 +1,17 @@
 use crate::types::Request;
+use std::collections::HashMap;
 use std::net::TcpStream;
 
-use crate::response::{ext_to_content_type_enum, send_data, send_file};
-use crate::types::ContentType;
+use crate::response::{ext_to_content_type_enum, send_file, send_response};
+use crate::types::{ContentType, Response, ResponseCode};
 
 fn handle_not_found(stream: &TcpStream) {
-    send_data(stream, &ContentType::Html, b"URL not found");
+    let mut response = Response {
+        response_code: ResponseCode::NotFound,
+        headers: HashMap::new(),
+        body: Some("Not found".as_bytes().to_vec()),
+    };
+    send_response(stream, &mut response);
 }
 
 fn handle_static(stream: &TcpStream, path: &str) {

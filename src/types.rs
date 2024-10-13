@@ -38,7 +38,14 @@ pub struct Request {
     pub path: String,
     pub http_version: HttpVersion,
     pub headers: HashMap<String, String>,
-    pub body: Option<String>,
+    pub body: Option<Vec<u8>>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Response {
+    pub response_code: ResponseCode,
+    pub headers: HashMap<String, String>,
+    pub body: Option<Vec<u8>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -47,4 +54,10 @@ pub enum ContentType {
     Css,
     Jpeg,
     Png,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ResponseCode {
+    OK,
+    NotFound,
 }
