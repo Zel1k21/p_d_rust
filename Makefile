@@ -18,7 +18,7 @@ lint:
 
 .PHONY: test
 test:
-	cargo test --test parse && cargo test --test server
+	cargo test --test parse && cargo test --test server && cargo test --test data_base
 
 .PHONY: all
 all: format lint test
