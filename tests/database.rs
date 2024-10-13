@@ -2,7 +2,7 @@
 mod test_db{
     use rusqlite::{Connection, Result};
     use std::collections::HashMap;
-    use p_d_rust::data_base::{add_user, delete_user};
+    use p_d_rust::database::{add_user, delete_user};
 
     #[derive(Debug)]
     struct User {
