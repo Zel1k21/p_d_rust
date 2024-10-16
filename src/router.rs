@@ -26,6 +26,14 @@ fn handle_index(stream: &TcpStream) {
     send_file(stream, "./static/html/index.html", &ContentType::Html);
 }
 
+fn handle_register(stream: &TcpStream) {
+    send_file(stream, "./static/html/register.html", &ContentType::Html);
+}
+
+fn handle_success(stream: &TcpStream) {
+    send_file(stream, "./static/html/success.html", &ContentType::Html);
+}
+
 pub fn route(stream: &TcpStream, request: &Request) {
     match request.path.as_str() {
         path if path.to_string().starts_with("/static/")
@@ -34,6 +42,8 @@ pub fn route(stream: &TcpStream, request: &Request) {
             handle_static(stream, path)
         }
         "/" => handle_index(stream),
+        "/register" => handle_register(stream),
+        "/success" => handle_success(stream),
         _ => handle_not_found(stream),
     }
 }
