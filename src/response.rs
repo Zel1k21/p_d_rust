@@ -4,36 +4,40 @@ use std::{io::Write, net::TcpStream};
 
 use crate::types::{ContentType, Response, ResponseCode};
 
-pub fn send_response(mut stream: &TcpStream, response: &mut Response) {
-    write_head(stream, response);
-    match &response.body {
+pub fn send_response(mut stream: &TcpStream, mut response: Response) {
+    match &mut response.body {
+        Some(bytes) => response
+            .headers
+            .insert("Content-Length".to_string(), bytes.len().to_string()),
+        None => None,
+    };
+    write_head(stream, &mut response);
+    match &mut response.body {
         Some(bytes) => stream.write_all(bytes).ok(),
         None => None,
     };
 }
 
-pub fn send_file(stream: &TcpStream, path: &str, content_type: &ContentType) {
+pub fn send_file(
+    stream: &TcpStream,
+    path: &str,
+    content_type: &ContentType,
+    response: Option<Response>,
+) {
     let contents = fs::read(path).expect("Error reading file");
-    let mut headers: HashMap<String, String> = HashMap::new();
-    headers.insert(
+    let mut resp = response.unwrap_or(Response {
+        response_code: ResponseCode::OK,
+        headers: HashMap::new(),
+        body: Some(contents),
+    });
+    resp.headers.insert(
         "Content-Type".to_string(),
         content_type_enum_to_str(content_type).to_string(),
     );
-    let mut response = Response {
-        response_code: ResponseCode::OK,
-        headers,
-        body: Some(contents),
-    };
-    send_response(stream, &mut response);
+    send_response(stream, resp);
 }
 
 fn write_head(mut stream: &TcpStream, response: &mut Response) {
-    match &response.body {
-        Some(content) => response
-            .headers
-            .insert("Content-Length".to_string(), content.len().to_string()),
-        None => None,
-    };
     let head = format!(
         "HTTP/1.1 {}\r\n",
         response_code_enum_to_str(&response.response_code)

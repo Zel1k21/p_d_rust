@@ -1,3 +1,4 @@
+pub mod cookie;
 pub mod database;
 pub mod parse;
 pub mod response;
