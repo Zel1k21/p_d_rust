@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::net::TcpStream;
 
 use crate::response::{ext_to_content_type_enum, send_file, send_response};
-use crate::types::{ContentType, Response, ResponseCode};
+use crate::types::{ContentType, Method, Response, ResponseCode};
 
 fn handle_not_found(stream: &TcpStream) {
     let response = Response {
@@ -26,7 +26,14 @@ fn handle_index(stream: &TcpStream) {
     send_file(stream, "./static/html/index.html", &ContentType::Html, None);
 }
 
-fn handle_register(stream: &TcpStream) {
+fn handle_register(stream: &TcpStream, request: &Request) {
+    if request.method == Method::Post {
+        let form_data = request.parse_form();
+        match &form_data {
+            Some(data) => println!("Register form data: {:?}", data),
+            None => (),
+        }
+    }
     send_file(
         stream,
         "./static/html/register.html",
@@ -52,7 +59,7 @@ pub fn route(stream: &TcpStream, request: &Request) {
             handle_static(stream, path)
         }
         "/" => handle_index(stream),
-        "/register" => handle_register(stream),
+        "/register" => handle_register(stream, request),
         "/success" => handle_success(stream),
         _ => handle_not_found(stream),
     }

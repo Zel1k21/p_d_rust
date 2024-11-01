@@ -101,3 +101,15 @@ pub fn get_method(method: Option<&str>) -> Result<Method, HttpParseError> {
         _ => return Err(HttpParseError::InvalidMethod),
     })
 }
+
+impl Request {
+    pub fn parse_form(&self) -> Option<HashMap<String, String>> {
+        self.body.as_ref().map(|bytes| {
+            String::from_utf8_lossy(bytes)
+                .split("&")
+                .filter_map(|str| str.split_once("="))
+                .map(|pair| (pair.0.to_string(), pair.1.to_string()))
+                .collect()
+        })
+    }
+}
