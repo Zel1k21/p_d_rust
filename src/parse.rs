@@ -102,6 +102,26 @@ pub fn get_method(method: Option<&str>) -> Result<Method, HttpParseError> {
     })
 }
 
+pub fn parse_semicolon_list(string: &str) -> HashMap<String, Option<String>> {
+    string
+        .split(";")
+        .map(|str| str.trim())
+        .map(|str| {
+            str.split_once("=")
+                .map(|pair| (pair.0.to_string(), Some(remove_quotes(pair.1).to_string())))
+                .unwrap_or((str.to_string(), None))
+        })
+        .collect() // TODO handle optional qoutes in values
+}
+
+fn remove_quotes(string: &str) -> &str {
+    let len = string.len();
+    if len >= 2 && &string[0..1] == "\"" && &string[len - 1..len] == "\"" {
+        return &string[1..len - 1];
+    }
+    string
+}
+
 impl Request {
     pub fn parse_form(&self) -> Option<HashMap<String, String>> {
         self.body.as_ref().map(|bytes| {
@@ -111,5 +131,19 @@ impl Request {
                 .map(|pair| (pair.0.to_string(), pair.1.to_string()))
                 .collect()
         })
+    }
+
+    pub fn parse_multipart_form(&self) -> Option<HashMap<String, String>> {
+        // let content_type_value = parse_semicolon_list(self.headers.get("Content-Type")?);
+        // let boundary = format!("--{}", &content_type_value.get("boundary")?.clone()?);
+        // TODO split by boundary and parse parts
+        // self.body.as_ref().map(|bytes| {
+        //     String::from_utf8_lossy(bytes)
+        //         .split(&boundary)
+        //         .filter_map(|str| str.split_once("="))
+        //         .map(|pair| (pair.0.to_string(), pair.1.to_string()))
+        //         .collect()
+        // })
+        None
     }
 }
