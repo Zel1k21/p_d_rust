@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="/static/css/profile.css">
+</head>
+
+<body>
+    <h1>User Profile</h1>
+    <!--Profile Picture Section-->
+    <div class="profile-picture">
+        <h2>Profile Picture</h2>
+        <img id="profilePic.." src="/static/images/default-profile.png" alt="Profile Picture" width="150">
+        <form method="post" id="profilePicForm" enctype="multipart/form-data">
+            <input type="file" id="profilePicInput" name="profilePic" accept="image/*"
+                onchange="previewProfilePic(event)">
+            <button type="submit">Upload</button></button>
+        </form>
+    </div>
+    <!--Profile Description Section-->
+    <div class="profile-description">
+        <h2>Profile Description</h2>
+        <textare id="profileDescription" rows="4" cols="50">This is your profile description, bitch!</textare> <br>
+        <button onclick="saveDescription()">Save</button>
+    </div>
+    <!--Gallery Section-->
+    <div class="gallery">
+        <h2>Gallery</h2>
+        <div id="galleryImages"></div>
+        <form method="post" id="galleryForm" enctype="multipart/form-data">
+            <input type="file" id="galleryInput" name="galleryImages" accept="image/*" multiple
+                onchange="previewGalleryImages(event)">
+            <button type="submit">Upload to Gallery</button>
+        </form>
+    </div>
+</body>
