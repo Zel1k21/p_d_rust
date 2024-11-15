@@ -24,12 +24,25 @@ pub fn send_file(
     content_type: &ContentType,
     response: Option<Response>,
 ) {
-    let contents = fs::read(path).expect("Error reading file");
+    let file = fs::read(path);
+    if file.is_err() {
+        send_response(
+            stream,
+            Response {
+                response_code: ResponseCode::NotFound,
+                headers: HashMap::new(),
+                body: None,
+            },
+        );
+        return;
+    }
+    let contents = file.unwrap();
     let mut resp = response.unwrap_or(Response {
         response_code: ResponseCode::OK,
         headers: HashMap::new(),
-        body: Some(contents),
+        body: None,
     });
+    resp.body = Some(contents);
     resp.headers.insert(
         "Content-Type".to_string(),
         content_type_enum_to_str(content_type).to_string(),
