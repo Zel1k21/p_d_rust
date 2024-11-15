@@ -1,42 +1,29 @@
 use std::collections::HashMap;
 use std::{io::Read, net::TcpStream};
 
-use crate::types::{HttpParseError, HttpVersion, Method, Request};
+use bstr::ByteSlice;
+
+use crate::types::{HttpParseError, HttpVersion, Method, MultipartFormEntry, Request};
 
 pub fn parse(stream: &mut TcpStream) -> Result<Request, HttpParseError> {
-    let mut buf = [0u8; 4096];
+    let mut buf = [0u8; 2_usize.pow(16)];
 
     match stream.read(&mut buf) {
         Err(err) => Err(HttpParseError::Other(format!("{}", err))),
-        Ok(n) => Ok(internal_parse(
-            String::from_utf8_lossy(buf.split_at(n).0).into_owned(),
-        )?),
+        Ok(n) => Ok(internal_parse(buf.split_at(n).0)?),
     }
 }
 
-pub fn internal_parse(req: String) -> Result<Request, HttpParseError> {
-    let mut head_body = req.split("\r\n\r\n");
-    let mut head_lines = head_body.next().unwrap_or_default().split("\r\n");
-    let first_line = head_lines.next().unwrap_or_default();
-
-    let (method, path, http_version) = parse_first_line(first_line)?;
-
-    let mut headers = HashMap::new();
-    for header in head_lines {
-        let (key, value) = parse_header(header)?;
-        headers.insert(key.to_string(), value.to_string());
-    }
-
-    let body = match head_body.next() {
-        Some(str) => {
-            if !str.is_empty() {
-                Some(str.as_bytes().to_vec())
-            } else {
-                None
-            }
-        }
-
-        None => None,
+pub fn internal_parse(req: &[u8]) -> Result<Request, HttpParseError> {
+    let head_body = split_vec_u8_once(req, "\r\n\r\n".as_bytes()).unwrap_or((req, &[]));
+    let head = String::from_utf8_lossy(head_body.0).into_owned();
+    let first_line_headers = head.split_once("\r\n").unwrap_or((&head, ""));
+    let (method, path, http_version) = parse_first_line(first_line_headers.0)?;
+    let headers = parse_headers(first_line_headers.1);
+    let body = if !head_body.1.is_empty() {
+        Some(head_body.1.to_vec())
+    } else {
+        None
     };
 
     Ok(Request {
@@ -46,6 +33,14 @@ pub fn internal_parse(req: String) -> Result<Request, HttpParseError> {
         headers,
         body,
     })
+}
+
+fn parse_headers(string: &str) -> HashMap<String, String> {
+    string
+        .split("\r\n")
+        .filter_map(|header| parse_header(header).ok())
+        .map(|pair| (pair.0.to_string(), pair.1.to_string()))
+        .collect()
 }
 
 fn parse_first_line(first_line: &str) -> Result<(Method, String, HttpVersion), HttpParseError> {
@@ -111,7 +106,7 @@ pub fn parse_semicolon_list(string: &str) -> HashMap<String, Option<String>> {
                 .map(|pair| (pair.0.to_string(), Some(remove_quotes(pair.1).to_string())))
                 .unwrap_or((str.to_string(), None))
         })
-        .collect() // TODO handle optional qoutes in values
+        .collect()
 }
 
 fn remove_quotes(string: &str) -> &str {
@@ -133,17 +128,39 @@ impl Request {
         })
     }
 
-    pub fn parse_multipart_form(&self) -> Option<HashMap<String, String>> {
-        // let content_type_value = parse_semicolon_list(self.headers.get("Content-Type")?);
-        // let boundary = format!("--{}", &content_type_value.get("boundary")?.clone()?);
-        // TODO split by boundary and parse parts
-        // self.body.as_ref().map(|bytes| {
-        //     String::from_utf8_lossy(bytes)
-        //         .split(&boundary)
-        //         .filter_map(|str| str.split_once("="))
-        //         .map(|pair| (pair.0.to_string(), pair.1.to_string()))
-        //         .collect()
-        // })
-        None
+    pub fn parse_multipart_form(&self) -> Option<HashMap<String, MultipartFormEntry>> {
+        let content_type_value = parse_semicolon_list(self.headers.get("Content-Type")?);
+        let boundary = format!("--{}", &content_type_value.get("boundary")?.clone()?).into_bytes();
+        self.body.as_ref().map(|bytes| {
+            bytes
+                .split_str(&boundary)
+                .filter_map(|byte_str| {
+                    let headers_value = split_vec_u8_once(byte_str, "\r\n\r\n".as_bytes())?;
+                    let mut headers = parse_headers(
+                        String::from_utf8_lossy(headers_value.0)
+                            .into_owned()
+                            .as_str(),
+                    );
+                    let content_disposition =
+                        parse_semicolon_list(headers.get("Content-Disposition")?);
+
+                    let name = content_disposition.get("name")?.clone()?;
+                    headers.remove("name");
+                    Some((
+                        name,
+                        MultipartFormEntry {
+                            headers,
+                            field_value: headers_value.1.to_vec(),
+                        },
+                    ))
+                })
+                .collect()
+        })
     }
+}
+
+fn split_vec_u8_once<'a>(vec: &'a [u8], splitter: &'a [u8]) -> Option<(&'a [u8], &'a [u8])> {
+    let first = vec.split_str(splitter).next()?;
+    let rest = vec.split_at_checked(first.len() + splitter.len())?.1;
+    Some((first, rest))
 }

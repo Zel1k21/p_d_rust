@@ -36,33 +36,33 @@ mod test_parse {
     #[test]
     fn it_constructs_request() {
         assert_eq!(
-            internal_parse("".to_owned()),
+            internal_parse(&"".as_bytes().to_vec()),
             Err(HttpParseError::InvalidMethod)
         );
         assert_eq!(
-            internal_parse("g".to_owned()),
+            internal_parse(&"g".as_bytes().to_vec()),
             Err(HttpParseError::InvalidMethod)
         );
 
         assert_eq!(
-            internal_parse("GET".to_owned()),
+            internal_parse(&"GET".as_bytes().to_vec()),
             Err(HttpParseError::InvalidPath)
         );
         assert_eq!(
-            internal_parse("GET   ".to_owned()),
+            internal_parse(&"GET   ".as_bytes().to_vec()),
             Err(HttpParseError::InvalidPath)
         );
         assert_eq!(
-            internal_parse("GET /path".to_owned()),
+            internal_parse(&"GET /path".as_bytes().to_vec()),
             Err(HttpParseError::InvalidHttpVersion)
         );
         assert_eq!(
-            internal_parse("GET /path HTTP/1.0".to_owned()),
+            internal_parse(&"GET /path HTTP/1.0".as_bytes().to_vec()),
             Err(HttpParseError::InvalidHttpVersion)
         );
 
         assert_eq!(
-            internal_parse("GET /path HTTP/1.1".to_owned()),
+            internal_parse(&"GET /path HTTP/1.1".as_bytes().to_vec()),
             Ok(Request {
                 method: Method::Get,
                 path: "/path".to_owned(),

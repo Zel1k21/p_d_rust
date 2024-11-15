@@ -49,6 +49,12 @@ pub struct Response {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct MultipartFormEntry {
+    pub headers: HashMap<String, String>,
+    pub field_value: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq)]
 pub enum ContentType {
     Html,
     Css,
