@@ -11,3 +11,6 @@ Cargo.lock
 
 # Database files
 *.db
+
+# VSCode data
+.vscode
