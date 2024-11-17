@@ -6,12 +6,41 @@ use bstr::ByteSlice;
 use crate::types::{HttpParseError, HttpVersion, Method, MultipartFormEntry, Request};
 
 pub fn parse(stream: &mut TcpStream) -> Result<Request, HttpParseError> {
-    let mut buf = [0u8; 2_usize.pow(16)];
+    let mut data = Vec::<u8>::new();
+    let mut buf = [0u8; 2_usize.pow(14)];
 
     match stream.read(&mut buf) {
         Err(err) => Err(HttpParseError::Other(format!("{}", err))),
-        Ok(n) => Ok(internal_parse(buf.split_at(n).0)?),
-    }
+        Ok(n) => {
+            data.extend(buf.split_at(n).0);
+            if let Ok(content_length) = parse_headers(
+                String::from_utf8_lossy(&data)
+                    .split_once("\r\n\r\n")
+                    .unwrap_or(("", ""))
+                    .0,
+            )
+            .get("Content-Length")
+            .unwrap_or(&"_".to_owned())
+            .trim()
+            .parse::<usize>()
+            {
+                if content_length > 2_usize.pow(26) {
+                    return Err(HttpParseError::RequestTooBig);
+                }
+                let mut rest_buf = vec![0u8; content_length];
+                match stream.read(&mut rest_buf) {
+                    Err(err) => Err(HttpParseError::Other(format!("{}", err))),
+                    Ok(n) => {
+                        data.extend(rest_buf.split_at(n).0);
+                        Ok(())
+                    }
+                }?
+            }
+            Ok(())
+        }
+    }?;
+
+    internal_parse(&data)
 }
 
 pub fn internal_parse(req: &[u8]) -> Result<Request, HttpParseError> {

@@ -22,6 +22,7 @@ pub enum HttpParseError {
     InvalidPath,
     InvalidHttpVersion,
     InvalidHeader,
+    RequestTooBig,
 
     Other(String),
 }
