@@ -13,28 +13,31 @@ pub fn parse(stream: &mut TcpStream) -> Result<Request, HttpParseError> {
         Err(err) => Err(HttpParseError::Other(format!("{}", err))),
         Ok(n) => {
             data.extend(buf.split_at(n).0);
-            if let Ok(content_length) = parse_headers(
-                String::from_utf8_lossy(&data)
-                    .split_once("\r\n\r\n")
-                    .unwrap_or(("", ""))
-                    .0,
-            )
-            .get("Content-Length")
-            .unwrap_or(&"_".to_owned())
-            .trim()
-            .parse::<usize>()
+            let head_body = split_vec_u8_once(&data, "\r\n\r\n".as_bytes()).unwrap_or((&data, &[]));
+
+            if let Ok(content_length) = parse_headers(&String::from_utf8_lossy(head_body.0))
+                .get("Content-Length")
+                .unwrap_or(&"_".to_owned())
+                .trim()
+                .parse::<usize>()
             {
                 if content_length > 2_usize.pow(26) {
                     return Err(HttpParseError::RequestTooBig);
                 }
-                let mut rest_buf = vec![0u8; content_length];
-                match stream.read(&mut rest_buf) {
-                    Err(err) => Err(HttpParseError::Other(format!("{}", err))),
-                    Ok(n) => {
-                        data.extend(rest_buf.split_at(n).0);
-                        Ok(())
+                if content_length > head_body.1.len() {
+                    let rest_len: usize = content_length - head_body.1.len();
+                    let mut received_len: usize = 0;
+                    while received_len < rest_len {
+                        match stream.read(&mut buf) {
+                            Err(err) => Err(HttpParseError::Other(format!("{}", err))),
+                            Ok(n) => {
+                                data.extend(buf);
+                                received_len += n;
+                                Ok(())
+                            }
+                        }?
                     }
-                }?
+                }
             }
             Ok(())
         }
