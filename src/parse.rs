@@ -31,7 +31,7 @@ pub fn parse(stream: &mut TcpStream) -> Result<Request, HttpParseError> {
                         match stream.read(&mut buf) {
                             Err(err) => Err(HttpParseError::Other(format!("{}", err))),
                             Ok(n) => {
-                                data.extend(buf);
+                                data.extend(buf.split_at(n).0);
                                 received_len += n;
                                 Ok(())
                             }
