@@ -5,7 +5,7 @@ const ADDRESS: &str = "localhost:3000";
 
 fn main() {
     let handle = thread::spawn(|| {
-        Server::new(ADDRESS).listen();
+        Server::new(ADDRESS, "database.db").listen();
     });
 
     handle.join().unwrap();

@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use std::fs;
 use std::net::TcpStream;
 
+use crate::database::add_user;
 use crate::response::{ext_to_content_type_enum, send_file, send_response};
-use crate::types::{ContentType, Method, Response, ResponseCode};
+use crate::types::{ContentType, DatabaseError, Method, Response, ResponseCode};
+use rusqlite::Connection;
 
 fn handle_not_found(stream: &TcpStream) {
     let response = Response {
@@ -27,12 +29,23 @@ fn handle_index(stream: &TcpStream) {
     send_file(stream, "./static/html/index.html", &ContentType::Html, None);
 }
 
-fn handle_register(stream: &TcpStream, request: &Request) {
+fn handle_register(stream: &TcpStream, request: &Request, db_conn: &Connection) {
     if request.method == Method::Post {
-        let form_data = request.parse_form();
-        match &form_data {
-            Some(data) => println!("Register form data: {:?}", data),
-            None => (),
+        if let Some(data) = request.parse_form() {
+            match (|| -> Result<String, DatabaseError> {
+                add_user(
+                    data.get("username").ok_or(DatabaseError::Default)?,
+                    data.get("password").ok_or(DatabaseError::Default)?,
+                    db_conn,
+                )
+            })() {
+                Err(_) => {
+                    println!("username or password not found!");
+                }
+                Ok(pass_hash) => {
+                    println!("registered successfully, passwprd hash is {:?}", pass_hash);
+                }
+            }
         }
     }
     send_file(
@@ -73,7 +86,7 @@ fn handle_profile(stream: &TcpStream, request: &Request) {
     );
 }
 
-pub fn route(stream: &TcpStream, request: &Request) {
+pub fn route(stream: &TcpStream, request: &Request, db_conn: &Connection) {
     match request.path.as_str() {
         path if path.to_string().starts_with("/static/")
             && !path.to_string().starts_with("/static/html/") =>
@@ -81,7 +94,7 @@ pub fn route(stream: &TcpStream, request: &Request) {
             handle_static(stream, path)
         }
         "/" => handle_index(stream),
-        "/register" => handle_register(stream, request),
+        "/register" => handle_register(stream, request, db_conn),
         "/success" => handle_success(stream),
         "/profile" => handle_profile(stream, request),
         _ => handle_not_found(stream),

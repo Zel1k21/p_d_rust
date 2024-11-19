@@ -1,8 +1,11 @@
+use r2d2::Pool;
+use r2d2_sqlite::SqliteConnectionManager;
 use std::collections::HashMap;
 use std::net::TcpListener;
 
 pub struct Server {
     pub(crate) listener: TcpListener,
+    pub(crate) db_connection_pool: Pool<SqliteConnectionManager>,
 }
 
 #[derive(Debug, PartialEq)]
