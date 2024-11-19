@@ -39,7 +39,7 @@ mod test_db {
         }?;
         init_database(db_path);
         let connection = Connection::open(db_path).expect("Error opening DB");
-        let pass_hash = match add_user("Billy Bones", "treasure map", &connection) {
+        match add_user("Billy Bones", "treasure map", &connection) {
             Err(err) => Err(match err {
                 DatabaseError::Default => "DefaultError",
                 DatabaseError::UniqueConstraintError => "UniqueConstraintError",
