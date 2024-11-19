@@ -28,6 +28,13 @@ pub enum HttpParseError {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum DatabaseError {
+    UniqueConstraintError,
+
+    Default,
+}
+
+#[derive(Debug, PartialEq)]
 pub enum HttpVersion {
     Http1_1,
     Http2_0,
