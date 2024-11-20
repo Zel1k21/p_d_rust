@@ -20,13 +20,13 @@ fn handle_not_found(stream: &TcpStream) {
 fn handle_static(stream: &TcpStream, path: &str) {
     let file_ext = path.split(".").last().unwrap();
     match ext_to_content_type_enum(file_ext) {
-        Ok(content_type) => send_file(stream, format!(".{}", path).as_str(), content_type, None),
+        Ok(content_type) => send_file(stream, format!(".{}", path).as_str(), content_type),
         Err(_) => handle_not_found(stream),
     }
 }
 
 fn handle_index(stream: &TcpStream) {
-    send_file(stream, "./static/html/index.html", &ContentType::Html, None);
+    send_file(stream, "./static/html/index.html", &ContentType::Html);
 }
 
 fn handle_register(stream: &TcpStream, request: &Request, db_conn: &Connection) {
@@ -48,21 +48,11 @@ fn handle_register(stream: &TcpStream, request: &Request, db_conn: &Connection) 
             }
         }
     }
-    send_file(
-        stream,
-        "./static/html/register.html",
-        &ContentType::Html,
-        None,
-    );
+    send_file(stream, "./static/html/register.html", &ContentType::Html);
 }
 
 fn handle_success(stream: &TcpStream) {
-    send_file(
-        stream,
-        "./static/html/success.html",
-        &ContentType::Html,
-        None,
-    );
+    send_file(stream, "./static/html/success.html", &ContentType::Html);
 }
 
 fn handle_profile(stream: &TcpStream, request: &Request) {
@@ -78,12 +68,7 @@ fn handle_profile(stream: &TcpStream, request: &Request) {
         }
         // TODO: filter file type, save to disk with unique name and add to DB
     }
-    send_file(
-        stream,
-        "./static/html/profile.html",
-        &ContentType::Html,
-        None,
-    );
+    send_file(stream, "./static/html/profile.html", &ContentType::Html);
 }
 
 pub fn route(stream: &TcpStream, request: &Request, db_conn: &Connection) {

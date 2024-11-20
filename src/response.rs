@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fs;
+use std::{fs, io};
 use std::{io::Write, net::TcpStream};
 
 use crate::types::{ContentType, Response, ResponseCode};
@@ -18,36 +18,27 @@ pub fn send_response(mut stream: &TcpStream, mut response: Response) {
     };
 }
 
-pub fn send_file(
-    stream: &TcpStream,
-    path: &str,
-    content_type: &ContentType,
-    response: Option<Response>,
-) {
-    let file = fs::read(path);
-    if file.is_err() {
-        send_response(
-            stream,
-            Response {
-                response_code: ResponseCode::NotFound,
-                headers: HashMap::new(),
-                body: None,
-            },
-        );
-        return;
-    }
-    let contents = file.unwrap();
-    let mut resp = response.unwrap_or(Response {
-        response_code: ResponseCode::OK,
-        headers: HashMap::new(),
-        body: None,
-    });
-    resp.body = Some(contents);
-    resp.headers.insert(
+pub fn resp_file(path: &str, content_type: &ContentType) -> io::Result<Response> {
+    let contents = fs::read(path)?;
+    let mut headers = HashMap::new();
+    headers.insert(
         "Content-Type".to_string(),
         content_type_enum_to_str(content_type).to_string(),
     );
-    send_response(stream, resp);
+    Ok(Response {
+        response_code: ResponseCode::OK,
+        headers,
+        body: Some(contents),
+    })
+}
+
+pub fn send_file(stream: &TcpStream, path: &str, content_type: &ContentType) {
+    let response = resp_file(path, content_type).unwrap_or(Response {
+        response_code: ResponseCode::NotFound,
+        headers: HashMap::new(),
+        body: None,
+    });
+    send_response(stream, response);
 }
 
 fn write_head(mut stream: &TcpStream, response: &mut Response) {
