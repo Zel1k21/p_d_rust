@@ -32,13 +32,12 @@ pub fn resp_file(path: &str, content_type: &ContentType) -> io::Result<Response>
     })
 }
 
-pub fn send_file(stream: &TcpStream, path: &str, content_type: &ContentType) {
-    let response = resp_file(path, content_type).unwrap_or(Response {
+pub fn file_resp(path: &str, content_type: &ContentType) -> Response {
+    resp_file(path, content_type).unwrap_or(Response {
         response_code: ResponseCode::NotFound,
         headers: HashMap::new(),
         body: None,
-    });
-    send_response(stream, response);
+    })
 }
 
 fn write_head(mut stream: &TcpStream, response: &mut Response) {
