@@ -31,10 +31,12 @@ fn handle_index() -> Response {
 fn handle_register(request: &Request, db_conn: &Connection) -> Response {
     if request.method == Method::Post {
         if let Some(data) = request.parse_form() {
-            match (|| -> Result<String, DatabaseError> {
+            match (|| -> Result<String, _> {
                 add_user(
                     data.get("username").ok_or(DatabaseError::Default)?,
                     data.get("password").ok_or(DatabaseError::Default)?,
+                    "",
+                    "",
                     db_conn,
                 )
             })() {

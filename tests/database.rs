@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod test_db {
-    use p_d_rust::{
-        database::{add_user, check_authorization, delete_user, init_database},
-        types::DatabaseError,
-    };
+    use p_d_rust::database::{add_user, delete_user, init_database, user_authorized};
     use rusqlite::{Connection, Result};
     use std::error::Error;
     use std::fs;
@@ -31,7 +28,7 @@ mod test_db {
 
     #[test]
     fn test_db() -> Result<(), Box<dyn Error>> {
-        let db_path = "database.db";
+        let db_path = "test.db";
         if Path::new(db_path).exists() {
             Err("DB file exists")
         } else {
@@ -39,17 +36,18 @@ mod test_db {
         }?;
         init_database(db_path);
         let connection = Connection::open(db_path).expect("Error opening DB");
-        match add_user("Billy Bones", "treasure map", &connection) {
-            Err(err) => Err(match err {
-                DatabaseError::Default => "DefaultError",
-                DatabaseError::UniqueConstraintError => "UniqueConstraintError",
-            }),
-            Ok(s) => Ok(s),
-        }?;
+        add_user(
+            "Billy Bones",
+            "treasure map",
+            "tokyo ghoul",
+            "i am ghoul, let me die",
+            &connection,
+        )?;
 
-        match check_authorization("Billy Bones", "treasure map", &connection) {
-            Err(_) => Err("Could not authorize"),
-            Ok(_) => Ok(()),
+        if user_authorized("Billy Bones", "treasure map", &connection) {
+            Ok(())
+        } else {
+            Err("Could not authorize")
         }?;
 
         println!("Users before delete:");

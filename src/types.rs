@@ -1,6 +1,8 @@
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fmt;
 use std::net::TcpListener;
 
 pub struct Server {
@@ -33,9 +35,19 @@ pub enum HttpParseError {
 #[derive(Debug, PartialEq)]
 pub enum DatabaseError {
     UniqueConstraintError,
+    NoUserError,
+    NoTypeError,
 
     Default,
 }
+
+impl fmt::Display for DatabaseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "SuperError is here!")
+    }
+}
+
+impl Error for DatabaseError {}
 
 #[derive(Debug, PartialEq)]
 pub enum HttpVersion {
