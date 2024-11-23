@@ -55,7 +55,7 @@ mod test_db {
             println!("{:?}", user);
         }
 
-        delete_user("Billy Bones", &connection)?;
+        delete_user(1, "treasure map", &connection)?;
 
         println!("\nUsers after delete:");
         for user in get_users(&connection)? {
