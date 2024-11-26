@@ -18,7 +18,7 @@ pub fn send_response(mut stream: &TcpStream, mut response: Response) {
     };
 }
 
-pub fn resp_file(path: &str, content_type: &ContentType) -> io::Result<Response> {
+fn resp_file(path: &str, content_type: &ContentType) -> io::Result<Response> {
     let contents = fs::read(path)?;
     let mut headers = HashMap::new();
     headers.insert(
@@ -38,6 +38,14 @@ pub fn file_resp(path: &str, content_type: &ContentType) -> Response {
         headers: HashMap::new(),
         body: None,
     })
+}
+
+pub fn redirect_resp(url: &str) -> Response {
+    Response {
+        response_code: ResponseCode::SeeOther,
+        headers: HashMap::from([("Location".to_string(), url.to_string())]),
+        body: None,
+    }
 }
 
 fn write_head(mut stream: &TcpStream, response: &mut Response) {
@@ -79,6 +87,7 @@ fn content_type_enum_to_str(content_type: &ContentType) -> &str {
 fn response_code_enum_to_str(response_code: &ResponseCode) -> &str {
     match response_code {
         ResponseCode::OK => "200 OK",
+        ResponseCode::SeeOther => "303 See Other",
         ResponseCode::NotFound => "404 Not Found",
     }
 }

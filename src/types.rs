@@ -89,5 +89,6 @@ pub enum ContentType {
 #[derive(Debug, PartialEq)]
 pub enum ResponseCode {
     OK,
+    SeeOther,
     NotFound,
 }
