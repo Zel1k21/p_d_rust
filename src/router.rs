@@ -3,10 +3,55 @@ use std::collections::HashMap;
 use std::fs;
 use std::net::TcpStream;
 
-use crate::database::add_user;
-use crate::response::{ext_to_content_type_enum, file_resp, send_response};
+use crate::database::{add_user, do_login, get_user};
+use crate::response::{ext_to_content_type_enum, file_resp, redirect_resp, send_response};
 use crate::types::{ContentType, DatabaseError, Method, Response, ResponseCode};
 use rusqlite::Connection;
+
+fn get_request_user_id(request: &Request, db_conn: &Connection) -> Option<usize> {
+    request
+        .read_cookie("auth_token")
+        .map(|token| get_user(token, db_conn))
+        .unwrap_or(None)
+}
+
+fn handle_login_form(request: &Request, db_conn: &Connection) -> Response {
+    if let Some(data) = request.parse_form() {
+        match do_login(
+            data.get("username").expect("Should get username"),
+            data.get("password").expect("Should get password"),
+            db_conn,
+        ) {
+            Err(_) => redirect_resp(&request.path),
+            Ok(token) => {
+                let mut resp = redirect_resp("/");
+                resp.write_cookie("auth_token", &token, 30 * 24 * 60 * 60);
+                resp
+            }
+        }
+    } else {
+        redirect_resp(&request.path)
+    }
+}
+
+fn handle_register_form(request: &Request, db_conn: &Connection) -> Response {
+    if let Some(data) = request.parse_form() {
+        match (|| {
+            add_user(
+                data.get("username").ok_or(DatabaseError::Default)?,
+                data.get("password").ok_or(DatabaseError::Default)?,
+                "",
+                "",
+                db_conn,
+            )
+        })() {
+            Err(_) => redirect_resp(&request.path),
+            Ok(_) => handle_login_form(request, db_conn),
+        }
+    } else {
+        redirect_resp(&request.path)
+    }
+}
 
 fn handle_not_found() -> Response {
     Response {
@@ -30,24 +75,7 @@ fn handle_index() -> Response {
 
 fn handle_register(request: &Request, db_conn: &Connection) -> Response {
     if request.method == Method::Post {
-        if let Some(data) = request.parse_form() {
-            match (|| -> Result<String, _> {
-                add_user(
-                    data.get("username").ok_or(DatabaseError::Default)?,
-                    data.get("password").ok_or(DatabaseError::Default)?,
-                    "",
-                    "",
-                    db_conn,
-                )
-            })() {
-                Err(_) => {
-                    println!("username or password not found!");
-                }
-                Ok(pass_hash) => {
-                    println!("registered successfully, passwprd hash is {:?}", pass_hash);
-                }
-            }
-        }
+        return handle_register_form(request, db_conn);
     }
     file_resp("./static/html/register.html", &ContentType::Html)
 }
@@ -56,8 +84,11 @@ fn handle_success() -> Response {
     file_resp("./static/html/success.html", &ContentType::Html)
 }
 
-fn handle_profile(request: &Request) -> Response {
+fn handle_profile(request: &Request, db_conn: &Connection) -> Response {
     if request.method == Method::Post {
+        if get_request_user_id(request, db_conn).is_none() {
+            return redirect_resp("/register");
+        }
         let form_data_opt = request.parse_multipart_form();
         // temporary for testing
         if let Some(form_data) = form_data_opt {
@@ -73,6 +104,20 @@ fn handle_profile(request: &Request) -> Response {
 }
 
 pub fn route(stream: &TcpStream, request: &Request, db_conn: &Connection) {
+    let clean_path = "/".to_owned()
+        + &request
+            .path
+            .split("/")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_owned())
+            .collect::<Vec<String>>()
+            .join("/");
+
+    if clean_path != request.path {
+        send_response(stream, redirect_resp(&clean_path));
+        return;
+    }
+
     let response = match request.path.as_str() {
         path if path.to_string().starts_with("/static/")
             && !path.to_string().starts_with("/static/html/") =>
@@ -82,7 +127,7 @@ pub fn route(stream: &TcpStream, request: &Request, db_conn: &Connection) {
         "/" => handle_index(),
         "/register" => handle_register(request, db_conn),
         "/success" => handle_success(),
-        "/profile" => handle_profile(request),
+        "/profile" => handle_profile(request, db_conn),
         _ => handle_not_found(),
     };
     send_response(stream, response);
