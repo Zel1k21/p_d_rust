@@ -148,7 +148,7 @@ pub fn delete_user(
 
 pub fn get_user(auth_token: &str, database: &Connection) -> Option<usize> {
     match database.query_row_and_then(
-        "SELECT user_id FROM auth_token WHERE name = (?1)",
+        "SELECT user_id FROM auth_token WHERE token = (?1)",
         [auth_token],
         |row| row.get(0),
     ) {
