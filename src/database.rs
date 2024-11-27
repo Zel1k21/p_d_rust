@@ -96,6 +96,10 @@ pub fn add_user(
     description: &str,
     database: &Connection,
 ) -> Result<(), Box<dyn Error>> {
+    validate_str_len(user_name, 4, 50)?;
+    validate_str_len(password, 8, 50)?;
+    validate_str_len(nickname, 4, 50)?;
+    validate_str_len(description, 0, 500)?;
     let stmt = database.prepare("SELECT * from user WHERE name = ?1");
 
     stmt.unwrap().exists([user_name]).map(|ok| {
@@ -200,6 +204,9 @@ pub fn update_user_info(
 ) -> Result<(), Box<dyn Error>> {
     let stmt = database.prepare("SELECT * from user WHERE id = ?1");
 
+    validate_str_len(nickname, 4, 50)?;
+    validate_str_len(description, 0, 500)?;
+
     stmt.unwrap().exists([user_id]).map(|ok| {
         if ok {
             Ok(())
@@ -228,7 +235,11 @@ pub fn add_media(
     description: &str,
     database: &Connection,
 ) -> Result<(), Box<dyn Error>> {
+    validate_str_len(title, 0, 50)?;
+    validate_str_len(description, 0, 200)?;
+
     let user_existence_stmt = database.prepare("SELECT * from user WHERE id = ?1");
+    
     user_existence_stmt
         .unwrap()
         .exists([user_id])
@@ -269,6 +280,9 @@ pub fn update_media_info(
     description: &str,
     database: &Connection,
 ) -> Result<(), Box<dyn Error>> {
+    validate_str_len(title, 0, 50)?;
+    validate_str_len(description, 0, 200)?;
+    
     let stmt = database.prepare("SELECT * from media WHERE id = ?1 and user_id = ?2");
 
     stmt.unwrap().exists([media_id, user_id]).map(|ok| {
@@ -309,4 +323,12 @@ pub fn delete_media(
     database.execute("DELETE FROM media WHERE id = (?1)", [media_id])?;
 
     Ok(())
+}
+
+pub fn validate_str_len(string: &str, min: usize, max: usize) -> Result<(), DatabaseError> {
+    if string.len() < min || string.len() > max {
+        Err(DatabaseError::StingLengthError)
+    } else {
+        Ok(())
+    }
 }

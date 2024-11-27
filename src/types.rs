@@ -38,6 +38,7 @@ pub enum DatabaseError {
     NoUserError,
     NoTypeError,
     NoMediaError,
+    StingLengthError,
 
     Default,
 }
