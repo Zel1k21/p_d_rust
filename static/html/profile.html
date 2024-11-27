@@ -139,7 +139,8 @@
 
 <div class="container">
     <h1>User Profile</h1>
-
+    <!-- TODO: template render user nickname, description and PFP -->
+    <!-- TODO: add form for user nickname, description and PFP, description will be added in JS before POST ??? -->
     <div class="row">
         <div class="col-md-4">
             <div class="profile-section">
@@ -161,6 +162,7 @@
     <div class="profile-section gallery-container">
         <h2>Gallery</h2>
         <div class="gallery" id="gallery"></div>
+        <!-- TODO: template for loop over collection of media data (url + id) -->
         <div class ="img-wrapper">
             <img src = "/static/images/eevee.png" alt = "name">
             <label for = "delete-3">
@@ -172,9 +174,16 @@
              </form>
 
         </div>
-        
+
         <label for="galleryInput" class="edit-icon gallery-edit-icon">✎</label>
-        <input type="file" id="galleryInput" accept="image/png, image/jpeg, video/*" multiple>
+        <form id="add-media-form" action="/add_media" method="post">
+            <input type="text" name="media-title" id="media-title">
+            <input type="text" name="media-description" id="media-description">
+            <input type="file" id="galleryInput" accept="image/png, image/jpeg, video/*" multiple>
+            <!-- TODO: template user_id from url -->
+            <input type="hidden" name="owner-id" value="1">
+            <input type="submit" hidden>
+        </form>
     </div>
 </div>
 
@@ -188,6 +197,10 @@
               }
               reader.readAsDataURL(file);
           }
+      });
+
+      document.getElementById('galleryInput').addEventListener('change', function(event) {
+        document.getElementById('add-media-form').submit();
       });
   </script>
 
