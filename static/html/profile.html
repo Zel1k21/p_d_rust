@@ -161,10 +161,35 @@
     <div class="profile-section gallery-container">
         <h2>Gallery</h2>
         <div class="gallery" id="gallery"></div>
+        <div class ="img-wrapper">
+            <img src = "/static/images/eevee.png" alt = "name">
+            <label for = "delete-3">
+                <img src = "/static/icons/delete.srg" alt = "delete" style = "cursor: pointer;">
+            </label>
+            <form action = "/delete_media" method = "post" hidden>
+                <input type = "hidden" name = "id" value ="3" >
+                <input type = "submit" id = "delete-3">
+             </form>
+
+        </div>
+        
         <label for="galleryInput" class="edit-icon gallery-edit-icon">✎</label>
         <input type="file" id="galleryInput" accept="image/png, image/jpeg, video/*" multiple>
     </div>
 </div>
+
+<script>
+    document.getElementById('profilePicInput').addEventListener('change', function(event) {
+          const file = event.target.files[0];
+          if (file) {
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                  document.getElementById('profilePic').src = e.target.result;
+              }
+              reader.readAsDataURL(file);
+          }
+      });
+  </script>
 
 </body>
 </html>
