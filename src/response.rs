@@ -48,6 +48,14 @@ pub fn redirect_resp(url: &str) -> Response {
     }
 }
 
+pub fn string_resp(string: &str) -> Response {
+    Response {
+        response_code: ResponseCode::OK,
+        headers: HashMap::new(),
+        body: Some(string.into()),
+    }
+}
+
 fn write_head(mut stream: &TcpStream, response: &mut Response) {
     let head = format!(
         "HTTP/1.1 {}\r\n",

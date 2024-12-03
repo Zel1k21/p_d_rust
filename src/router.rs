@@ -1,12 +1,28 @@
 use crate::types::Request;
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::fs;
 use std::net::TcpStream;
+use tera::{Context, Tera};
 
 use crate::database::{add_user, do_login, get_user};
-use crate::response::{ext_to_content_type_enum, file_resp, redirect_resp, send_response};
+use crate::response::{
+    ext_to_content_type_enum, file_resp, redirect_resp, send_response, string_resp,
+};
 use crate::types::{ContentType, DatabaseError, Method, Response, ResponseCode};
 use rusqlite::Connection;
+
+lazy_static! {
+    pub static ref TEMPLATES: Tera = {
+        match Tera::new("templates/*.html") {
+            Ok(t) => t,
+            Err(e) => {
+                println!("Parsing error(s): {}", e);
+                ::std::process::exit(1);
+            }
+        }
+    };
+}
 
 fn get_request_user_id(request: &Request, db_conn: &Connection) -> Option<usize> {
     request
@@ -70,7 +86,10 @@ fn handle_static(path: &str) -> Response {
 }
 
 fn handle_index() -> Response {
-    file_resp("./static/html/index.html", &ContentType::Html)
+    let rendered = TEMPLATES
+        .render("index.html", &Context::new())
+        .expect("Should render");
+    string_resp(&rendered)
 }
 
 fn handle_register(request: &Request, db_conn: &Connection) -> Response {
