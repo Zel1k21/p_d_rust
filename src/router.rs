@@ -138,11 +138,7 @@ pub fn route(stream: &TcpStream, request: &Request, db_conn: &Connection) {
     }
 
     let response = match request.path.as_str() {
-        path if path.to_string().starts_with("/static/")
-            && !path.to_string().starts_with("/static/html/") =>
-        {
-            handle_static(path)
-        }
+        path if path.starts_with("/static/") => handle_static(path),
         "/" => handle_index(),
         "/register" => handle_register(request, db_conn),
         "/success" => handle_success(),
