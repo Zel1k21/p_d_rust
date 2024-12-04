@@ -5,11 +5,11 @@ use std::fs;
 use std::net::TcpStream;
 use tera::{Context, Tera};
 
-use crate::database::{add_user, do_login, get_user};
+use crate::database::{add_user, do_login, get_user, get_user_info};
 use crate::response::{
     ext_to_content_type_enum, file_resp, redirect_resp, send_response, string_resp,
 };
-use crate::types::{ContentType, DatabaseError, Method, Response, ResponseCode};
+use crate::types::{ContentType, DatabaseError, Method, Response, ResponseCode, User};
 use rusqlite::Connection;
 
 lazy_static! {
@@ -56,7 +56,7 @@ fn handle_register_form(request: &Request, db_conn: &Connection) -> Response {
             add_user(
                 data.get("username").ok_or(DatabaseError::Default)?,
                 data.get("password").ok_or(DatabaseError::Default)?,
-                "",
+                data.get("nickname").ok_or(DatabaseError::Default)?,
                 "",
                 db_conn,
             )
@@ -86,24 +86,34 @@ fn handle_static(path: &str) -> Response {
 }
 
 fn handle_index() -> Response {
-    let rendered = TEMPLATES
-        .render("index.html", &Context::new())
-        .expect("Should render");
-    string_resp(&rendered)
+    file_resp("./templates/index.html", &ContentType::Html)
 }
 
 fn handle_register(request: &Request, db_conn: &Connection) -> Response {
     if request.method == Method::Post {
         return handle_register_form(request, db_conn);
     }
-    file_resp("./static/html/register.html", &ContentType::Html)
+    file_resp("./templates/register.html", &ContentType::Html)
 }
 
 fn handle_success() -> Response {
-    file_resp("./static/html/success.html", &ContentType::Html)
+    file_resp("./templates/success.html", &ContentType::Html)
 }
 
 fn handle_profile(request: &Request, db_conn: &Connection) -> Response {
+    let username = request
+        .path
+        .split_once("/profile/")
+        .expect("Should return pair")
+        .1;
+
+    let user_info: User;
+    if let Some(user_i) = get_user_info(username, db_conn) {
+        user_info = user_i;
+    } else {
+        return handle_not_found();
+    }
+
     if request.method == Method::Post {
         if get_request_user_id(request, db_conn).is_none() {
             return redirect_resp("/register");
@@ -119,7 +129,14 @@ fn handle_profile(request: &Request, db_conn: &Connection) -> Response {
         }
         // TODO: filter file type, save to disk with unique name and add to DB
     }
-    file_resp("./static/html/profile.html", &ContentType::Html)
+
+    let mut context = Context::new();
+    context.insert("user", &user_info);
+
+    let rendered = TEMPLATES
+        .render("profile.html", &context)
+        .expect("Should render");
+    string_resp(&rendered)
 }
 
 pub fn route(stream: &TcpStream, request: &Request, db_conn: &Connection) {
@@ -142,7 +159,7 @@ pub fn route(stream: &TcpStream, request: &Request, db_conn: &Connection) {
         "/" => handle_index(),
         "/register" => handle_register(request, db_conn),
         "/success" => handle_success(),
-        "/profile" => handle_profile(request, db_conn),
+        path if path.starts_with("/profile/") => handle_profile(request, db_conn),
         _ => handle_not_found(),
     };
     send_response(stream, response);

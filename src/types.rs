@@ -1,5 +1,6 @@
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
@@ -92,4 +93,11 @@ pub enum ResponseCode {
     OK,
     SeeOther,
     NotFound,
+}
+
+#[derive(Debug, PartialEq, Serialize)]
+pub struct User {
+    pub username: String,
+    pub nickname: String,
+    pub description: String,
 }

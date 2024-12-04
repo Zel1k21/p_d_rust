@@ -1,7 +1,7 @@
 extern crate rusqlite;
 use std::{error::Error, time::SystemTime};
 
-use crate::types::DatabaseError;
+use crate::types::{DatabaseError, User};
 use rusqlite::{Connection, Result};
 use sha2::{Digest, Sha256};
 
@@ -161,6 +161,23 @@ pub fn get_user(auth_token: &str, database: &Connection) -> Option<usize> {
     }
 }
 
+pub fn get_user_info(username: &str, database: &Connection) -> Option<User> {
+    match database.query_row_and_then(
+        "SELECT name, nickname, description FROM user WHERE name = (?1)",
+        [username],
+        |row| {
+            Ok::<User, rusqlite::Error>(User {
+                username: row.get(0).expect("Should get username"),
+                nickname: row.get(1).expect("Should get nickname"),
+                description: row.get(2).expect("Should get description"),
+            })
+        },
+    ) {
+        Ok(user) => Some(user),
+        Err(_) => None,
+    }
+}
+
 pub fn do_login(
     username: &str,
     password: &str,
@@ -239,7 +256,7 @@ pub fn add_media(
     validate_str_len(description, 0, 200)?;
 
     let user_existence_stmt = database.prepare("SELECT * from user WHERE id = ?1");
-    
+
     user_existence_stmt
         .unwrap()
         .exists([user_id])
@@ -282,7 +299,7 @@ pub fn update_media_info(
 ) -> Result<(), Box<dyn Error>> {
     validate_str_len(title, 0, 50)?;
     validate_str_len(description, 0, 200)?;
-    
+
     let stmt = database.prepare("SELECT * from media WHERE id = ?1 and user_id = ?2");
 
     stmt.unwrap().exists([media_id, user_id]).map(|ok| {

@@ -138,7 +138,7 @@
 </div>
 
 <div class="container">
-    <h1>User Profile</h1>
+    <h1>{{ user.nickname }}</h1>
     <!-- TODO: template render user nickname, description and PFP -->
     <!-- TODO: add form for user nickname, description and PFP, description will be added in JS before POST ??? -->
     <div class="row">
@@ -152,7 +152,7 @@
         <div class="col-md-8">
             <div class="profile-section">
                 <h2>Profile Description</h2>
-                <textarea id="profileDescription" rows="4"></textarea>
+                <textarea id="profileDescription" rows="4">{{ user.description }}</textarea>
                 <span class="edit-icon">✎</span>
             </div>
         </div>
