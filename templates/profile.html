@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 80px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .profile-section {
+            background-color: #ffc014;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 50px;
+            position: relative; 
+        }
+
+        .edit-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            display: none; 
+        }
+
+        .profile-section:hover .edit-icon {
+            display: block;
+        }
+
+        .profile-description textarea {
+            border-radius: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            resize: vertical;
+            overflow-y: auto;
+            background-color: transparent;
+            min-height: 120px; 
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin: 0 20px 30px;
+        }
+
+        .gallery-item {
+            position: relative; 
+            max-width: 200px;
+            max-height: 200px;
+        }
+
+        .gallery-item img, .gallery-item video {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .delete-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(255, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            padding: 5px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .gallery-item:hover .delete-icon {
+            display: block;
+        }
+
+        .theme-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+
+        .theme-options {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background-color: #ffc014;
+            border-radius: 10px;
+            padding: 10px;
+            display: none;
+        }
+
+        .theme-button:focus + .theme-options, .theme-options:hover {
+            display: block;
+        }
+
+        body.light-theme {
+            background-color: #fff;
+            color: #333;
+        }
+
+        body.dark-theme {
+            background-color: #333;
+            color: #eee;
+        }
+
+        body.dark-theme .profile-section,
+        body.dark-theme .theme-options {
+            background-color: #ffc014;
+        }
+
+        .gallery-container { 
+            position: relative;
+        }
+
+        #galleryInput { 
+            display: none;
+        }
+
+        .gallery-edit-icon { 
+            font-size: 1.5em;
+        }
+
+        label.gallery-edit-icon { 
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body class="light-theme">
+
+<button class="btn btn-primary theme-button" type="button">Change Theme</button>
+<div class="theme-options">
+    <button class="btn btn-light" onclick="document.body.classList.remove('dark-theme'); document.body.classList.add('light-theme')">Light Theme</button>
+    <button class="btn btn-dark" onclick="document.body.classList.remove('light-theme'); document.body.classList.add('dark-theme')">Dark Theme</button>
+</div>
+
+<div class="container">
+    <h1>{{ user.nickname }}</h1>
+    <!-- TODO: template render user nickname, description and PFP -->
+    <!-- TODO: add form for user nickname, description and PFP, description will be added in JS before POST ??? -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="profile-section">
+                <h2>Profile Picture</h2>
+                <img id="profilePic" src="https://via.placeholder.com/150" alt="Profile Picture" width="150">
+                <label for="profilePicInput" class="edit-icon">✎</label> <input type="file" id="profilePicInput" accept="image/png, image/jpeg" style="display:none;">
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="profile-section">
+                <h2>Profile Description</h2>
+                <textarea id="profileDescription" rows="4">{{ user.description }}</textarea>
+                <span class="edit-icon">✎</span>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="profile-section gallery-container">
+        <h2>Gallery</h2>
+        <div class="gallery" id="gallery"></div>
+        <!-- TODO: template for loop over collection of media data (url + id) -->
+        <div class ="img-wrapper">
+            <img src = "/static/images/eevee.png" alt = "name">
+            <label for = "delete-3">
+                <img src = "/static/icons/delete.srg" alt = "delete" style = "cursor: pointer;">
+            </label>
+            <form action = "/delete_media" method = "post" hidden>
+                <input type = "hidden" name = "id" value ="3" >
+                <input type = "submit" id = "delete-3">
+             </form>
+
+        </div>
+
+        <label for="galleryInput" class="edit-icon gallery-edit-icon">✎</label>
+        <form id="add-media-form" action="/add_media" method="post">
+            <input type="text" name="media-title" id="media-title">
+            <input type="text" name="media-description" id="media-description">
+            <input type="file" id="galleryInput" accept="image/png, image/jpeg, video/*" multiple>
+            <!-- TODO: template user_id from url -->
+            <input type="hidden" name="owner-id" value="1">
+            <input type="submit" hidden>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('profilePicInput').addEventListener('change', function(event) {
+          const file = event.target.files[0];
+          if (file) {
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                  document.getElementById('profilePic').src = e.target.result;
+              }
+              reader.readAsDataURL(file);
+          }
+      });
+
+      document.getElementById('galleryInput').addEventListener('change', function(event) {
+        document.getElementById('add-media-form').submit();
+      });
+  </script>
+
+</body>
+</html>

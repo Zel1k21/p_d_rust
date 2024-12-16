@@ -1,0 +1,12 @@
+use gall_rs::types::Server;
+use std::thread;
+
+const ADDRESS: &str = "localhost:3000";
+
+fn main() {
+    let handle = thread::spawn(|| {
+        Server::new(ADDRESS, "database.db").listen();
+    });
+
+    handle.join().unwrap();
+}

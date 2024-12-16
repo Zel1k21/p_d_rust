@@ -1,0 +1,23 @@
+[package]
+name = "gall_rs"
+version = "0.0.5"
+edition = "2021"
+description = "A web app written in Rust"
+keywords = ["http", "request", "HTTP"]
+categories = ["web-programming::http-client",]
+repository = "https://github.com/Zel1k21/gall_rs"
+authors = ["Aleksandr Voloshchuk <053000voloshch@gmail.com>", "Dmitriy Trundaev <dtrund2005@gmail.com>", "Evita Kudabaeva <cabelloeva60@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+autotests = true
+
+[dependencies]
+bstr = "1.11.0"
+lazy_static = "1.5.0"
+r2d2 = "0.8.10"
+r2d2_sqlite = "0.25.0"
+reqwest = { version = "0.11.13", features = ["blocking"] }
+rusqlite = { version = "0.32.1", features = ["bundled"] }
+serde = { version = "1.0", features = ["derive"] }
+sha2 = "0.10.8"
+tera = { version = "1.20.0", default-features = false }

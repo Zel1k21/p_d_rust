@@ -1,0 +1,9 @@
+body {
+    background-color: rgb(6, 4, 10);
+}
+
+h1 {
+    margin: 5em;
+    color: white;
+    text-shadow: 0 0 2em rgb(140, 180, 255);
+}
