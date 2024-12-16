@@ -37,7 +37,7 @@ impl Server {
                 Server::handle_connection(stream, self.db_connection_pool.get().unwrap())
             }
             Err(err) => println!("Error: {:?}", err),
-        } // fuck fuck shit, fuck this connection object >:(
+        }
     }
 
     pub fn listen(&mut self) {

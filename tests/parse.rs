@@ -1,5 +1,5 @@
-use p_d_rust::parse::{get_method, get_path, internal_parse};
-use p_d_rust::types::{HttpParseError, HttpVersion, Method, Request};
+use gall_rs::parse::{get_method, get_path, internal_parse};
+use gall_rs::types::{HttpParseError, HttpVersion, Method, Request};
 
 #[cfg(test)]
 mod test_parse {

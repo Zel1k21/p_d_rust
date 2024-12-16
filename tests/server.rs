@@ -1,4 +1,4 @@
-use p_d_rust::types::Server;
+use gall_rs::types::Server;
 use std::fs;
 use std::thread;
 

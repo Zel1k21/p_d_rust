@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test_db {
-    use p_d_rust::database::{add_user, delete_user, init_database, user_authorized};
+    use gall_rs::database::{add_user, delete_user, init_database, user_authorized};
     use rusqlite::{Connection, Result};
     use std::error::Error;
     use std::fs;

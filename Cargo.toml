@@ -1,12 +1,12 @@
 [package]
-name = "p_d_rust"
-version = "0.0.1"
+name = "gall_rs"
+version = "0.0.5"
 edition = "2021"
-description = "A simple HTTP server written in Rust"
+description = "A web app written in Rust"
 keywords = ["http", "request", "HTTP"]
 categories = ["web-programming::http-client",]
-repository = "https://github.com/yezz123/RustyServer"
-authors = ["Yasser Tahiri <hello@yezz.me>"]
+repository = "https://github.com/Zel1k21/gall_rs"
+authors = ["Aleksandr Voloshchuk <053000voloshch@gmail.com>", "Dmitriy Trundaev <dtrund2005@gmail.com>", "Evita Kudabaeva <cabelloeva60@gmail.com>"]
 readme = "README.md"
 license = "MIT"
 autotests = true
